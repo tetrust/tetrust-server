@@ -1,10 +1,13 @@
 use axum::{response::Html, routing::get, Router};
 
+use crate::routes::websocket;
+
 pub(crate) fn router() -> Router {
     // 라우터 생성
     let app = Router::new()
         .route("/", get(index))
-        .route("/health", get(health));
+        .route("/health", get(health))
+        .nest("/websocket", websocket::router());
 
     app
 }
