@@ -1,6 +1,8 @@
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
 
+// 사용자 계정 모델
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct User {
     pub _id: ObjectId,
