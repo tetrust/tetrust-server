@@ -4,4 +4,5 @@ use serde::{Deserialize, Serialize};
 pub struct HealthReponse {
     pub server_ok: bool,
     pub database_ok: bool,
+    pub authorized: bool,
 }

@@ -11,12 +11,14 @@ use std::error::Error;
 use crate::{models::User, utils::jwt};
 
 pub struct AuthService {
-    database: Extension<Arc<Database>>,
+    _database: Extension<Arc<Database>>,
 }
 
 impl AuthService {
     pub fn new(database: Extension<Arc<Database>>) -> Self {
-        Self { database }
+        Self {
+            _database: database,
+        }
     }
 
     pub fn get_access_token(&self, user_id: String) -> String {

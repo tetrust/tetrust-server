@@ -1,8 +1,8 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use axum::Extension;
 use mongodb::{
-    bson::{doc, Array},
+    bson::{doc, oid::ObjectId, Array},
     Database,
 };
 use std::error::Error;
@@ -30,6 +30,16 @@ impl UserService {
         let user = self.database.collection::<User>(User::NAME);
 
         let filter = doc! {"email": email};
+        let result = user.find_one(filter, None).await?;
+
+        Ok(result)
+    }
+
+    pub async fn find_by_id(&self, user_id: String) -> Result<Option<User>, Box<dyn Error>> {
+        let user = self.database.collection::<User>(User::NAME);
+        let user_id = ObjectId::from_str(user_id.as_str())?;
+
+        let filter = doc! {"_id": user_id };
         let result = user.find_one(filter, None).await?;
 
         Ok(result)
