@@ -26,6 +26,15 @@ impl UserService {
         Ok(result.is_some())
     }
 
+    pub async fn find_by_email(&self, email: String) -> Result<Option<User>, Box<dyn Error>> {
+        let user = self.database.collection::<User>(User::NAME);
+
+        let filter = doc! {"email": email};
+        let result = user.find_one(filter, None).await?;
+
+        Ok(result)
+    }
+
     pub async fn create_user(&self, user_data: InsertUser) -> Result<String, Box<dyn Error>> {
         let user = self.database.collection::<InsertUser>(User::NAME);
 

@@ -8,7 +8,7 @@ use axum::{
 use mongodb::Database;
 
 use crate::extensions::mongo::MongoClient;
-use crate::routes::{user, websocket};
+use crate::routes::{auth, user, websocket};
 
 pub(crate) async fn router() -> Router {
     // 라우터 생성
@@ -16,6 +16,7 @@ pub(crate) async fn router() -> Router {
         .route("/", get(index))
         .route("/health", get(health))
         .nest("/user", user::router().await)
+        .nest("/auth", auth::router().await)
         .nest("/websocket", websocket::router())
         .layer(Extension(MongoClient::get_database("tetrust").await));
 
