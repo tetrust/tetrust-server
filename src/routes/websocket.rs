@@ -17,8 +17,8 @@ async fn handle_game(ws: WebSocketUpgrade) -> Response {
 }
 
 async fn handle_game_socket(mut socket: WebSocket) {
-    while let Some(msg) = socket.recv().await {
-        let message = if let Ok(message) = msg {
+    while let Some(message) = socket.recv().await {
+        let message = if let Ok(message) = message {
             message
         } else {
             // client disconnected

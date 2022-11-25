@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 axum = { version = "0.5.17", features = ["ws"] }
 tokio = { version = "1", features = ["full"] }
+tower = "0.4.13"
+mongodb = { version = "2.3.1", features = ["tokio-runtime"] }
+serde_json = "1.0.48"
+serde = { version="1.0.105", features=["derive"] }
+dotenv = "0.15.0"
