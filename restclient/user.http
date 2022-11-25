@@ -1,0 +1,12 @@
+@host = localhost:3000
+
+### 
+POST http://{{host}}/user/signup
+Content-Type: application/json
+
+{
+    "email": "sssang971@naver.com", 
+    "nickname": "myyrakle", 
+    "password": "q1w2e3r4"
+}
+### 

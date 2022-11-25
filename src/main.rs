@@ -1,5 +1,8 @@
-mod extension;
+mod extensions;
+mod middlewares;
+mod models;
 mod routes;
+mod utils;
 
 use std::net::SocketAddr;
 
