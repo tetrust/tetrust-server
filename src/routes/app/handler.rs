@@ -7,15 +7,15 @@ use axum::{
 };
 use mongodb::Database;
 
-use crate::{extension::mongo::MongoClient, routes::websocket};
-
-use super::dto::health_response::HealthReponse;
+use crate::extensions::mongo::MongoClient;
+use crate::routes::{user, websocket};
 
 pub(crate) async fn router() -> Router {
     // 라우터 생성
     let app = Router::new()
         .route("/", get(index))
         .route("/health", get(health))
+        .nest("/user", user::router().await)
         .nest("/websocket", websocket::router())
         .layer(Extension(MongoClient::get_database("tetrust").await));
 
@@ -25,6 +25,8 @@ pub(crate) async fn router() -> Router {
 async fn index() -> Html<&'static str> {
     Html("<h1>Hello, World!</h1>")
 }
+
+use super::dto::health_response::HealthReponse;
 
 async fn health(database: Extension<Arc<Database>>) -> impl IntoResponse {
     let server_ok = true;
