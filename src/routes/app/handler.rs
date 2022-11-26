@@ -25,7 +25,7 @@ pub(crate) async fn router() -> Router {
     let app = Router::new()
         .route("/", get(index))
         .route("/health", get(health))
-        .route("/init", get(init))
+        .route("/init", get(init)) // 배포시 비활성화
         .nest("/user", user::router().await)
         .nest("/auth", auth::router().await)
         .nest("/websocket", websocket::router())
@@ -90,7 +90,7 @@ async fn init(database: Extension<Arc<Database>>) -> impl IntoResponse {
         if room_number.count_documents(None, None).await? == 0 {
             let room_number = database.collection::<InsertRoomNumber>(RoomNumber::NAME);
 
-            for i in (0..=9999) {
+            for i in 0..=9999 {
                 let number = format!("{:0>4}", i);
                 let insert_data = InsertRoomNumber {
                     room_number: number,
