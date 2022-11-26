@@ -15,7 +15,7 @@ use crate::{
 };
 
 use super::{
-    dto::{CreateRoomRequest, CreateRoomResponse},
+    dto::{CreateRoomRequest, CreateRoomResponse, EnterRoomRequest, EnterRoomResponse},
     RoomService,
 };
 
@@ -80,4 +80,32 @@ async fn create_room(
             (StatusCode::INTERNAL_SERVER_ERROR).into_response()
         }
     }
+}
+
+async fn enter_room(
+    Json(body): Json<EnterRoomRequest>,
+    database: Extension<Arc<Database>>,
+    current_user: Extension<CurrentUser>,
+) -> impl IntoResponse + Send {
+    if current_user.authorized == false || current_user.user.is_none() {
+        return (StatusCode::UNAUTHORIZED).into_response();
+    }
+
+    let current_user = current_user.user.as_ref().unwrap().to_owned();
+
+    let service = RoomService::new(database.clone());
+    let response = EnterRoomResponse {};
+
+    let room = match service.find_by_room_number(body.room_number).await {
+        Ok(room) => match room {
+            Some(room) => room,
+            None => {
+                return (StatusCode::NOT_FOUND).into_response();
+            }
+        },
+        Err(error) => {
+            println!("error: {:?}", error);
+            return (StatusCode::INTERNAL_SERVER_ERROR).into_response();
+        }
+    };
 }

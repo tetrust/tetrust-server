@@ -18,6 +18,31 @@ impl RoomService {
         Self { database }
     }
 
+    pub async fn find_by_room_number(
+        &self,
+        number: String,
+    ) -> Result<Option<Room>, Box<dyn Error>> {
+        let user = self.database.collection::<Room>(Room::NAME);
+
+        let filter = doc! {"room_number": number};
+        let result = user.find_one(filter, None).await?;
+
+        Ok(result)
+    }
+
+    pub async fn add_to_waitlist(
+        &self,
+        room_id: ObjectId,
+        user_id: ObjectId,
+    ) -> Result<Option<Room>, Box<dyn Error>> {
+        let user = self.database.collection::<Room>(Room::NAME);
+
+        let filter = doc! {"room_number": number};
+        let result = user.find_one(filter, None).await?;
+
+        Ok(result)
+    }
+
     pub async fn take_room_number(&self) -> Result<Option<String>, mongodb::error::Error> {
         let room_number = self.database.collection::<RoomNumber>(RoomNumber::NAME);
 
