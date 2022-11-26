@@ -13,7 +13,7 @@ use mongodb::{options::IndexOptions, Database};
 
 use crate::{
     extensions::{CurrentUser, MongoClient},
-    models::{InsertRoomNumber, Room, RoomNumber, User},
+    models::{InsertRoomNumber, Room, RoomMember, RoomNumber, User},
 };
 use crate::{
     middlewares::auth_middleware,
@@ -99,6 +99,17 @@ async fn init(database: Extension<Arc<Database>>) -> impl IntoResponse {
                 room_number.insert_one(insert_data, None).await?;
             }
         }
+
+        let room_member = database.collection::<RoomMember>(RoomMember::NAME);
+        room_member
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! {"room_id": 1, "user_id":1})
+                    .options(IndexOptions::builder().unique(true).build())
+                    .build(),
+                None,
+            )
+            .await?;
 
         Ok(())
     })()
