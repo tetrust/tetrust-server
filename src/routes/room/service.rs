@@ -18,7 +18,7 @@ impl RoomService {
         Self { database }
     }
 
-    pub async fn take_room_number(&self) -> Result<Option<String>, Box<dyn Error>> {
+    pub async fn take_room_number(&self) -> Result<Option<String>, mongodb::error::Error> {
         let room_number = self.database.collection::<RoomNumber>(RoomNumber::NAME);
 
         // 추후에는 랜덤액세스로 가져오는 편이 좋지 않을까 생각중
@@ -26,14 +26,18 @@ impl RoomService {
 
         if let Some(ref update_data) = result {
             room_number
-                .update_one(doc! {"_id": update_data._id}, doc! {"in_used":true}, None)
+                .update_one(
+                    doc! {"_id": update_data._id},
+                    doc! {"$set":{"in_used": true}},
+                    None,
+                )
                 .await?;
         }
 
         Ok(result.map(|e| e.room_number))
     }
 
-    pub async fn put_back_room_number(&self, number: String) -> Result<(), Box<dyn Error>> {
+    pub async fn _put_back_room_number(&self, number: String) -> Result<(), mongodb::error::Error> {
         let room_number = self.database.collection::<RoomNumber>(RoomNumber::NAME);
 
         let result = room_number
@@ -42,14 +46,21 @@ impl RoomService {
 
         if let Some(ref update_data) = result {
             room_number
-                .update_one(doc! {"_id": update_data._id}, doc! {"in_used":false}, None)
+                .update_one(
+                    doc! {"_id": update_data._id},
+                    doc! {"$set":{"in_used": false}},
+                    None,
+                )
                 .await?;
         }
 
         Ok(())
     }
 
-    pub async fn create_room(&self, room_data: InsertRoom) -> Result<String, Box<dyn Error>> {
+    pub async fn create_room(
+        &self,
+        room_data: InsertRoom,
+    ) -> Result<String, mongodb::error::Error> {
         let user = self.database.collection::<InsertRoom>(Room::NAME);
 
         let result = user.insert_one(room_data, None).await?;

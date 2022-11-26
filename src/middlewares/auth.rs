@@ -19,6 +19,8 @@ pub async fn auth_middleware<B>(
         .get(AUTHORIZATION)
         .and_then(|header| header.to_str().ok());
 
+    let mut current_user = CurrentUser::default();
+
     if let Some(auth_header) = auth_header {
         println!(">> Authorization: {}", auth_header);
 
@@ -30,14 +32,15 @@ pub async fn auth_middleware<B>(
             let user_service = UserService::new(Extension(database.to_owned()));
 
             if let Ok(Some(user)) = user_service.find_by_id(user_id).await {
-                let current_user = Arc::new(CurrentUser {
+                current_user = CurrentUser {
                     user: Some(user),
                     authorized: true,
-                });
-                req.extensions_mut().insert(current_user);
+                };
             }
         }
     }
+
+    req.extensions_mut().insert(current_user);
 
     Ok(next.run(req).await)
 }

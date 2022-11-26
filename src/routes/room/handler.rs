@@ -28,16 +28,19 @@ pub async fn router() -> Router {
 async fn create_room(
     Json(body): Json<CreateRoomRequest>,
     database: Extension<Arc<Database>>,
-    current_user: Extension<Arc<CurrentUser>>,
-) -> impl IntoResponse {
+    current_user: Extension<CurrentUser>,
+) -> impl IntoResponse + Send {
     if current_user.authorized == false || current_user.user.is_none() {
         return (StatusCode::UNAUTHORIZED).into_response();
     }
 
     let current_user = current_user.user.as_ref().unwrap().to_owned();
 
-    let service = RoomService::new(database);
-    let mut response = CreateRoomResponse { room_number: None };
+    let service = RoomService::new(database.clone());
+    let mut response = CreateRoomResponse {
+        room_number: None,
+        room_id: None,
+    };
 
     let room_number = service.take_room_number().await;
 
@@ -59,14 +62,18 @@ async fn create_room(
         title: body.title,
         is_private: body.is_private,
         room_number: room_number.clone(),
-        players: vec![],
+        players: vec![current_user._id],
         waiting_list: vec![],
+        host_id: current_user._id,
     };
 
+    let service = RoomService::new(database);
+
     match service.create_room(room_data).await {
-        Ok(user_id) => {
+        Ok(room_id) => {
             response.room_number = Some(room_number);
-            (StatusCode::OK, Json(response)).into_response()
+            response.room_id = Some(room_id);
+            Json(response).into_response()
         }
         Err(error) => {
             println!("error: {:?}", error);

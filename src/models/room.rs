@@ -11,6 +11,7 @@ pub struct Room {
     pub players: Vec<ObjectId>,      // 게임 플레이어 목록
     pub waiting_list: Vec<ObjectId>, // 대기자 목록
     pub is_private: bool,            // 비공개방인지 여부
+    pub host_id: ObjectId,           // 방 주인
 }
 
 impl Room {
@@ -24,4 +25,5 @@ pub struct InsertRoom {
     pub players: Vec<ObjectId>,
     pub waiting_list: Vec<ObjectId>,
     pub is_private: bool,
+    pub host_id: ObjectId,
 }

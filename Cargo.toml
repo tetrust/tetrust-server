@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = { version = "0.5.17", features = ["ws"] }
+axum = { version = "0.5.17", features = ["ws", "macros"] }
 tokio = { version = "1", features = ["full"] }
 tower = "0.4.13"
 mongodb = { version = "2.3.1", features = ["tokio-runtime"] }

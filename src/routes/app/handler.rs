@@ -30,8 +30,7 @@ pub(crate) async fn router() -> Router {
         .nest("/room", room::router().await)
         .nest("/websocket", websocket::router())
         .route_layer(middleware::from_fn(auth_middleware))
-        .layer(Extension(MongoClient::get_database("tetrust").await))
-        .layer(Extension(Arc::new(CurrentUser::default())));
+        .layer(Extension(MongoClient::get_database("tetrust").await));
 
     app
 }
@@ -44,7 +43,7 @@ use super::dto::health_response::HealthReponse;
 
 async fn health(
     database: Extension<Arc<Database>>,
-    current_user: Extension<Arc<CurrentUser>>,
+    current_user: Extension<CurrentUser>,
 ) -> impl IntoResponse {
     let server_ok = true;
     let mut database_ok = false;
