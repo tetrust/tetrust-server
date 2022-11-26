@@ -98,4 +98,13 @@ impl RoomService {
 
         Ok(room_id)
     }
+
+    pub async fn start_room(&self, room_id: ObjectId) -> Result<(), mongodb::error::Error> {
+        let room = self.database.collection::<Room>(Room::NAME);
+
+        room.update_one(doc! {"_id": room_id}, doc! {"$set":{"on_play": true}}, None)
+            .await?;
+
+        Ok(())
+    }
 }

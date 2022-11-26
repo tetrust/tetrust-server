@@ -10,6 +10,7 @@ pub struct Room {
     pub room_number: String, // 접속용 고유 방 번호: 0000-9999
     pub is_private: bool,    // 비공개방인지 여부
     pub host_id: ObjectId,   // 방 주인
+    pub on_play: bool,       // 플레이중인지
 }
 
 impl Room {
@@ -22,4 +23,5 @@ pub struct InsertRoom {
     pub room_number: String,
     pub is_private: bool,
     pub host_id: ObjectId,
+    pub on_play: bool,
 }

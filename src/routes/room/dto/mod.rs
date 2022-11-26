@@ -9,3 +9,9 @@ pub mod enter_room_response;
 
 pub use enter_room_request::*;
 pub use enter_room_response::*;
+
+pub mod start_room_request;
+pub mod start_room_response;
+
+pub use start_room_request::*;
+pub use start_room_response::*;
