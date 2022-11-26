@@ -10,3 +10,14 @@ Content-Type: application/json
     "password": "q1w2e3r4"
 }
 ### 
+
+### 
+POST http://{{host}}/user/signup
+Content-Type: application/json
+
+{
+    "email": "sssang97333@naver.com", 
+    "nickname": "myyrakle2", 
+    "password": "q1w2e3r4"
+}
+### 

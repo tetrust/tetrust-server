@@ -1,5 +1,6 @@
 @host = localhost:3000
 @access_token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiNjM4MDkwNWY0YzQyNDRkM2U0M2E4NDAxIiwiZXhwIjoxNjY5NDU4NTAzfQ.2UVeB6C8lT_f4EySMzppmsyeODJiXPoagnvVUgR3URE
+@access_token2 = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoiNjM4MWQ4ZWZlY2FlMGY4Y2JlN2I1YzQ2IiwiZXhwIjoxNjY5NTQwNDgxfQ.64awt3gCi5cFh3A2pMbHd5Ivj8UtV8vhzIuz6phja7Q
 
 ### 
 POST http://{{host}}/room
@@ -9,5 +10,14 @@ Authorization: {{access_token}}
 {
     "title": "test", 
     "is_private": true
+}
+### 
+
+### 
+POST http://{{host}}/room/enter
+Content-Type: application/json
+Authorization: {{access_token2}}
+
+{
 }
 ### 

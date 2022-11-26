@@ -7,7 +7,9 @@ use mongodb::{
 };
 use std::error::Error;
 
-use crate::models::{InsertRoom, InsertRoomNumber, InsertUser, Room, RoomNumber, User};
+use crate::models::{
+    InsertRoom, InsertRoomMember, InsertRoomNumber, InsertUser, Room, RoomMember, RoomNumber, User,
+};
 
 pub struct RoomService {
     database: Extension<Arc<Database>>,
@@ -30,17 +32,19 @@ impl RoomService {
         Ok(result)
     }
 
-    pub async fn add_to_waitlist(
+    pub async fn create_room_member(
         &self,
-        room_id: ObjectId,
-        user_id: ObjectId,
-    ) -> Result<Option<Room>, Box<dyn Error>> {
-        let user = self.database.collection::<Room>(Room::NAME);
+        member_data: InsertRoomMember,
+    ) -> Result<String, mongodb::error::Error> {
+        let user = self
+            .database
+            .collection::<InsertRoomMember>(RoomMember::NAME);
 
-        let filter = doc! {"room_number": number};
-        let result = user.find_one(filter, None).await?;
+        let result = user.insert_one(member_data, None).await?;
+        let member_id = result.inserted_id.as_object_id().unwrap();
+        let member_id = member_id.to_hex();
 
-        Ok(result)
+        Ok(member_id)
     }
 
     pub async fn take_room_number(&self) -> Result<Option<String>, mongodb::error::Error> {

@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use axum::{
     http::StatusCode,
@@ -6,11 +6,11 @@ use axum::{
     routing::{get, post},
     Extension, Json, Router,
 };
-use mongodb::Database;
+use mongodb::{bson::oid::ObjectId, Database};
 
 use crate::{
     extensions::{mongo::MongoClient, CurrentUser},
-    models::{room_number, InsertRoom, InsertUser, User},
+    models::{room_number, InsertRoom, InsertRoomMember, InsertUser, RoomMember, User},
     utils::{generate_uuid, hash_password},
 };
 
@@ -20,7 +20,9 @@ use super::{
 };
 
 pub async fn router() -> Router {
-    let app = Router::new().route("/", post(create_room));
+    let app = Router::new()
+        .route("/", post(create_room))
+        .route("/enter", post(enter_room));
 
     app
 }
@@ -62,8 +64,6 @@ async fn create_room(
         title: body.title,
         is_private: body.is_private,
         room_number: room_number.clone(),
-        players: vec![current_user._id],
-        waiting_list: vec![],
         host_id: current_user._id,
     };
 
@@ -72,7 +72,20 @@ async fn create_room(
     match service.create_room(room_data).await {
         Ok(room_id) => {
             response.room_number = Some(room_number);
-            response.room_id = Some(room_id);
+            response.room_id = Some(room_id.clone());
+
+            let member_data = InsertRoomMember {
+                room_id: ObjectId::from_str(room_id.as_str()).unwrap(),
+                user_id: current_user._id,
+                active: true,
+                on_play: false,
+            };
+
+            if let Err(error) = service.create_room_member(member_data).await {
+                println!("error: {:?}", error);
+                return (StatusCode::INTERNAL_SERVER_ERROR).into_response();
+            }
+
             Json(response).into_response()
         }
         Err(error) => {
@@ -108,4 +121,18 @@ async fn enter_room(
             return (StatusCode::INTERNAL_SERVER_ERROR).into_response();
         }
     };
+
+    let member_data = InsertRoomMember {
+        room_id: room._id,
+        user_id: current_user._id,
+        active: true,
+        on_play: false,
+    };
+
+    if let Err(error) = service.create_room_member(member_data).await {
+        println!("error: {:?}", error);
+        return (StatusCode::INTERNAL_SERVER_ERROR).into_response();
+    }
+
+    Json(response).into_response()
 }
