@@ -17,17 +17,17 @@ use crate::{
 };
 use crate::{
     middlewares::auth_middleware,
-    routes::{auth, user, websocket},
+    routes::{auth, room, user, websocket},
 };
 
 pub(crate) async fn router() -> Router {
-    // 라우터 생성
     let app = Router::new()
         .route("/", get(index))
         .route("/health", get(health))
         .route("/init", get(init)) // 배포시 비활성화
         .nest("/user", user::router().await)
         .nest("/auth", auth::router().await)
+        .nest("/room", room::router().await)
         .nest("/websocket", websocket::router())
         .route_layer(middleware::from_fn(auth_middleware))
         .layer(Extension(MongoClient::get_database("tetrust").await))

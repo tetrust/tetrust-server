@@ -20,7 +20,6 @@ use super::{
 };
 
 pub async fn router() -> Router {
-    // 라우터 생성
     let app = Router::new().route("/signup", post(signup));
 
     app
