@@ -2,6 +2,7 @@ mod extensions;
 mod middlewares;
 mod models;
 mod routes;
+mod types;
 mod utils;
 
 use std::net::SocketAddr;
