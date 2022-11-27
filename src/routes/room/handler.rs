@@ -1,32 +1,52 @@
-use std::{str::FromStr, sync::Arc};
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 
 use axum::{
+    extract::{
+        ws::{Message, WebSocket},
+        Query, State, WebSocketUpgrade,
+    },
     http::StatusCode,
     response::{Html, IntoResponse},
     routing::{get, post, put},
     Extension, Json, Router,
 };
+use futures::{sink::SinkExt, stream::StreamExt};
 use mongodb::{bson::oid::ObjectId, Database};
+use tokio::sync::broadcast;
 
 use crate::{
-    extensions::{mongo::MongoClient, CurrentUser},
+    extensions::{mongo::MongoClient, CurrentUser, GameState},
     models::{room_number, InsertRoom, InsertRoomMember, InsertUser, RoomMember, User},
+    routes::room::dto::{GameWebsocketTransfer, RenderTheBoard, TakeMyBoard},
     utils::{generate_uuid, hash_password},
 };
 
 use super::{
     dto::{
         CreateRoomRequest, CreateRoomResponse, EnterRoomRequest, EnterRoomResponse,
-        StartRoomRequest, StartRoomResponse,
+        GameWebsocketOpenQuery, StartRoomRequest, StartRoomResponse,
     },
     RoomService,
 };
 
+#[derive(Debug, Clone)]
+pub struct GameStateFoo {}
+
 pub async fn router() -> Router {
+    let game_state = Arc::new(Mutex::new(GameState {
+        tx_map: Default::default(),
+    }));
+
     let app = Router::new()
         .route("/", post(create_room))
         .route("/enter", post(enter_room))
-        .route("/start", put(start_room));
+        .route("/start", put(start_room))
+        .route("/websocket/game", get(handle_game))
+        .with_state(game_state);
 
     app
 }
@@ -180,4 +200,96 @@ async fn start_room(
     }
 
     Json(response).into_response()
+}
+
+async fn handle_game(
+    ws: WebSocketUpgrade,
+    State(state): State<Arc<Mutex<GameState>>>,
+    current_user: Extension<CurrentUser>,
+    Query(query): Query<GameWebsocketOpenQuery>,
+) -> impl IntoResponse {
+    if current_user.authorized == false || current_user.user.is_none() {
+        return (StatusCode::UNAUTHORIZED).into_response();
+    }
+
+    let user_id = current_user.user.as_ref().unwrap()._id;
+    let room_id = query.room_id;
+
+    if !state.lock().unwrap().tx_map.contains_key(&room_id) {
+        let (tx, _rx) = broadcast::channel::<GameWebsocketTransfer>(100);
+        state.lock().unwrap().tx_map.insert(room_id.clone(), tx);
+    }
+
+    let tx = state
+        .lock()
+        .unwrap()
+        .tx_map
+        .get(&room_id)
+        .unwrap()
+        .to_owned();
+
+    ws.on_upgrade(move |socket: WebSocket| async move {
+        let (mut sender, mut receiver) = socket.split();
+
+        let mut rx = tx.subscribe();
+
+        // Clone things we want to pass to the receiving task.
+        let tx = tx.clone();
+
+        // 웹소켓으로 입력이 들어오면 채널에 쏴주는 태스크
+        let mut recv_task = tokio::spawn(async move {
+            while let Some(Ok(incoming)) = receiver.next().await {
+                match incoming {
+                    Message::Text(text) => {
+                        if let Ok(game_request) =
+                            serde_json::from_str::<GameWebsocketTransfer>(text.as_str())
+                        {
+                            match game_request {
+                                GameWebsocketTransfer::TakeMyBoard(data) => {
+                                    println!(">> In TakeMyBoard");
+                                    let data = RenderTheBoard {
+                                        board: data.board,
+                                        user_id,
+                                    };
+
+                                    tx.send(GameWebsocketTransfer::RenderTheBoard(data))
+                                        .unwrap();
+                                }
+                                _ => {}
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    _ => {
+                        continue;
+                    }
+                }
+            }
+        });
+
+        // 채널에 입력이 들어오면 웹소켓으로 쏴주는 태스크
+        let mut send_task = tokio::spawn(async move {
+            while let Ok(message) = rx.recv().await {
+                match &message {
+                    GameWebsocketTransfer::RenderTheBoard(data) => {
+                        if data.user_id != user_id {
+                            let text = serde_json::to_string(&message).unwrap();
+
+                            if sender.send(Message::Text(text)).await.is_err() {
+                                break;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        });
+
+        // 태스크가 하나라도 끝나면 다른 것도 정리
+        tokio::select! {
+            _ = (&mut send_task) => recv_task.abort(),
+            _ = (&mut recv_task) => send_task.abort(),
+        };
+    })
 }

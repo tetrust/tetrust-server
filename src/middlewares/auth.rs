@@ -7,7 +7,7 @@ use axum::{
     Extension,
 };
 use mongodb::Database;
-use url::{ParseError, Url};
+use url::Url;
 
 use crate::{extensions::CurrentUser, routes::user::UserService, utils::jwt};
 

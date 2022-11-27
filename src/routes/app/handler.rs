@@ -1,5 +1,5 @@
-use std::error::Error;
 use std::sync::Arc;
+use std::{collections::HashMap, error::Error};
 
 use axum::{
     http::StatusCode,
@@ -17,7 +17,7 @@ use crate::{
 };
 use crate::{
     middlewares::auth_middleware,
-    routes::{auth, room, user, websocket},
+    routes::{auth, room, user},
 };
 
 pub(crate) async fn router() -> Router {
@@ -28,7 +28,6 @@ pub(crate) async fn router() -> Router {
         .nest("/user", user::router().await)
         .nest("/auth", auth::router().await)
         .nest("/room", room::router().await)
-        .nest("/websocket", websocket::router())
         .route_layer(middleware::from_fn(auth_middleware))
         .layer(Extension(MongoClient::get_database("tetrust").await));
 
