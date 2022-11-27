@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     extract::State,
-    response::Response,
+    response::{IntoResponse, Response},
     routing::get,
     Extension, Router,
 };
@@ -30,7 +30,7 @@ async fn handle_game(
     ws: WebSocketUpgrade,
     State(state): State<Arc<GameState>>,
     current_user: Extension<CurrentUser>,
-) -> Response {
+) -> impl IntoResponse {
     ws.on_upgrade(move |mut socket: WebSocket| async move {
         let (mut sender, mut receiver) = socket.split();
 

@@ -7,6 +7,7 @@ use axum::{
     Extension,
 };
 use mongodb::Database;
+use url::{ParseError, Url};
 
 use crate::{extensions::CurrentUser, routes::user::UserService, utils::jwt};
 
@@ -17,7 +18,22 @@ pub async fn auth_middleware<B>(
     let auth_header = req
         .headers()
         .get(AUTHORIZATION)
-        .and_then(|header| header.to_str().ok());
+        .and_then(|header| header.to_str().ok())
+        .map(|e| e.to_owned());
+
+    let auth_query = {
+        let uri = "http://fake.host".to_owned() + req.uri().to_string().as_str();
+        let parsed_url = Url::parse(uri.as_str()).ok();
+        parsed_url.map(|e| {
+            e.query_pairs()
+                .into_owned()
+                .find(|(key, _)| key.to_owned() == "AUTHORIZATION")
+                .map(|(_, value)| value.to_owned())
+        })
+    }
+    .flatten();
+
+    let auth_header = auth_header.or(auth_query);
 
     let mut current_user = CurrentUser::default();
 

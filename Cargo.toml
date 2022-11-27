@@ -19,3 +19,4 @@ jsonwebtoken = "8.1.1"
 epoch-timestamp = "1.0.0"
 itertools = "0.10.5"
 futures = "0.3.25"
+url = { version = "2", features = ["serde"] }
