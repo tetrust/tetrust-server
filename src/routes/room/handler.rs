@@ -32,9 +32,9 @@ pub async fn router() -> Router {
 }
 
 async fn create_room(
-    Json(body): Json<CreateRoomRequest>,
     database: Extension<Arc<Database>>,
     current_user: Extension<CurrentUser>,
+    Json(body): Json<CreateRoomRequest>,
 ) -> impl IntoResponse + Send {
     if current_user.authorized == false || current_user.user.is_none() {
         return (StatusCode::UNAUTHORIZED).into_response();
@@ -101,9 +101,9 @@ async fn create_room(
 }
 
 async fn enter_room(
-    Json(body): Json<EnterRoomRequest>,
     database: Extension<Arc<Database>>,
     current_user: Extension<CurrentUser>,
+    Json(body): Json<EnterRoomRequest>,
 ) -> impl IntoResponse + Send {
     if current_user.authorized == false || current_user.user.is_none() {
         return (StatusCode::UNAUTHORIZED).into_response();
@@ -143,9 +143,9 @@ async fn enter_room(
 }
 
 async fn start_room(
-    Json(body): Json<StartRoomRequest>,
     database: Extension<Arc<Database>>,
     current_user: Extension<CurrentUser>,
+    Json(body): Json<StartRoomRequest>,
 ) -> impl IntoResponse + Send {
     if current_user.authorized == false || current_user.user.is_none() {
         return (StatusCode::UNAUTHORIZED).into_response();

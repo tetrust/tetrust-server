@@ -26,8 +26,8 @@ pub async fn router() -> Router {
 }
 
 async fn signup(
-    Json(body): Json<SignupRequest>,
     database: Extension<Arc<Database>>,
+    Json(body): Json<SignupRequest>,
 ) -> impl IntoResponse {
     let service = UserService::new(database);
     let mut response = SignupResponse {
