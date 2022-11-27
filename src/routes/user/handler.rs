@@ -20,15 +20,14 @@ use super::{
 };
 
 pub async fn router() -> Router {
-    // 라우터 생성
     let app = Router::new().route("/signup", post(signup));
 
     app
 }
 
 async fn signup(
-    Json(body): Json<SignupRequest>,
     database: Extension<Arc<Database>>,
+    Json(body): Json<SignupRequest>,
 ) -> impl IntoResponse {
     let service = UserService::new(database);
     let mut response = SignupResponse {

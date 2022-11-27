@@ -1,5 +1,5 @@
-use std::error::Error;
 use std::sync::Arc;
+use std::{collections::HashMap, error::Error};
 
 use axum::{
     http::StatusCode,
@@ -13,25 +13,23 @@ use mongodb::{options::IndexOptions, Database};
 
 use crate::{
     extensions::{CurrentUser, MongoClient},
-    models::{InsertRoomNumber, Room, RoomNumber, User},
+    models::{InsertRoomNumber, Room, RoomMember, RoomNumber, User},
 };
 use crate::{
     middlewares::auth_middleware,
-    routes::{auth, user, websocket},
+    routes::{auth, room, user},
 };
 
 pub(crate) async fn router() -> Router {
-    // 라우터 생성
     let app = Router::new()
         .route("/", get(index))
         .route("/health", get(health))
         .route("/init", get(init)) // 배포시 비활성화
         .nest("/user", user::router().await)
         .nest("/auth", auth::router().await)
-        .nest("/websocket", websocket::router())
+        .nest("/room", room::router().await)
         .route_layer(middleware::from_fn(auth_middleware))
-        .layer(Extension(MongoClient::get_database("tetrust").await))
-        .layer(Extension(Arc::new(CurrentUser::default())));
+        .layer(Extension(MongoClient::get_database("tetrust").await));
 
     app
 }
@@ -44,7 +42,7 @@ use super::dto::health_response::HealthReponse;
 
 async fn health(
     database: Extension<Arc<Database>>,
-    current_user: Extension<Arc<CurrentUser>>,
+    current_user: Extension<CurrentUser>,
 ) -> impl IntoResponse {
     let server_ok = true;
     let mut database_ok = false;
@@ -100,6 +98,17 @@ async fn init(database: Extension<Arc<Database>>) -> impl IntoResponse {
                 room_number.insert_one(insert_data, None).await?;
             }
         }
+
+        let room_member = database.collection::<RoomMember>(RoomMember::NAME);
+        room_member
+            .create_index(
+                IndexModel::builder()
+                    .keys(doc! {"room_id": 1, "user_id":1})
+                    .options(IndexOptions::builder().unique(true).build())
+                    .build(),
+                None,
+            )
+            .await?;
 
         Ok(())
     })()

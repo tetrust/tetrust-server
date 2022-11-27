@@ -20,7 +20,7 @@ Authorization: {{access_token}}
 ### 
 
 ### 
-GET http://{{host}}/health
+GET http://{{host}}/init
 Content-Type: application/json
 
 {
