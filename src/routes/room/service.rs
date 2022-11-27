@@ -66,7 +66,7 @@ impl RoomService {
         Ok(result.map(|e| e.room_number))
     }
 
-    pub async fn _put_back_room_number(&self, number: String) -> Result<(), mongodb::error::Error> {
+    pub async fn _release_room_number(&self, number: String) -> Result<(), mongodb::error::Error> {
         let room_number = self.database.collection::<RoomNumber>(RoomNumber::NAME);
 
         let result = room_number
