@@ -19,6 +19,9 @@ pub use start_room_response::*;
 pub mod trasfer_board;
 pub use trasfer_board::*;
 
+pub mod trasfer_garbage;
+pub use trasfer_garbage::*;
+
 pub mod game_websocket_transfer;
 pub use game_websocket_transfer::*;
 
