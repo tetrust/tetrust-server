@@ -21,7 +21,7 @@ use tokio::sync::broadcast;
 use crate::{
     extensions::{mongo::MongoClient, CurrentUser, GameState},
     models::{room_number, InsertRoom, InsertRoomMember, InsertUser, RoomMember, User},
-    routes::room::dto::{GameWebsocketTransfer, RenderTheBoard, TakeMyBoard},
+    routes::room::dto::{GameWebsocketTransfer, ReceiveGarbage, RenderTheBoard, TakeMyBoard},
     utils::{generate_uuid, hash_password},
 };
 
@@ -255,6 +255,16 @@ async fn handle_game(
                                     tx.send(GameWebsocketTransfer::RenderTheBoard(data))
                                         .unwrap();
                                 }
+                                GameWebsocketTransfer::TakeGarbage(data) => {
+                                    println!(">> In TakeGarbage");
+                                    let data = ReceiveGarbage {
+                                        line: data.line,
+                                        user_id,
+                                    };
+
+                                    tx.send(GameWebsocketTransfer::ReceiveGarbage(data))
+                                        .unwrap();
+                                }
                                 _ => {}
                             }
                         } else {
@@ -274,6 +284,15 @@ async fn handle_game(
                 match &message {
                     GameWebsocketTransfer::RenderTheBoard(data) => {
                         if data.user_id != user_id {
+                            let text = serde_json::to_string(&message).unwrap();
+
+                            if sender.send(Message::Text(text)).await.is_err() {
+                                break;
+                            }
+                        }
+                    }
+                    GameWebsocketTransfer::ReceiveGarbage(data) => {
+                        if data.user_id == user_id {
                             let text = serde_json::to_string(&message).unwrap();
 
                             if sender.send(Message::Text(text)).await.is_err() {
